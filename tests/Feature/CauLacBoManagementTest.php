@@ -219,7 +219,7 @@ class CauLacBoManagementTest extends TestCase
             ->assertSee('Trưởng ban Truyền thông')
             ->assertSee('pending@example.test')
             ->assertDontSee('departed@example.test')
-            ->assertSee('Chưa có dữ liệu');
+            ->assertDontSee('Điểm rèn luyện');
 
         $this->get(route('caulacbo.members', ['caulacbo' => $club->MaCLB, 'status' => ThanhVienTrangThai::CHO_PHE_DUYET->value]))
             ->assertOk()
@@ -704,13 +704,30 @@ class CauLacBoManagementTest extends TestCase
             'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG,
         ]);
 
-        // 1. Owner views member list: sees "Chi tiết" for all, "Xóa" for other members, and "Rời CLB" for themselves
-        $this->actingAs($owner)
-            ->get(route('caulacbo.members', $club->MaCLB))
-            ->assertOk()
+        $pendingUser = $this->createUser('pending-action', 'pending_act@example.test', '24002099');
+        $pendingMembership = ThanhVienCLB::create([
+            'MaNguoiDung' => $pendingUser->MaNguoiDung,
+            'MaCLB' => $club->MaCLB,
+            'ChucVu' => 'Ứng viên',
+            'NgayThamGia' => now(),
+            'TrangThai' => ThanhVienTrangThai::CHO_PHE_DUYET,
+        ]);
+
+        // 1. Owner views member list: sees "Chi tiết" for all, "Xóa" ONLY for official members (not pending), and "Rời CLB" for themselves
+        $response = $this->actingAs($owner)->get(route('caulacbo.members', $club->MaCLB));
+        $response->assertOk()
             ->assertSee('Chi tiết')
             ->assertSee('Xóa')
-            ->assertSee('Rời CLB');
+            ->assertSee('Rời CLB')
+            ->assertSee('Phê duyệt')
+            ->assertSee('Từ chối');
+
+        // Only the 2 official non-owner members have the "Xóa" button; pending applicant does not have "Xóa"
+        $this->assertEquals(2, substr_count($response->getContent(), 'btn-member-delete'));
+        $this->assertStringNotContainsString(
+            'thanh-vien/'.$pendingMembership->MaThanhVien.'" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm(\'Bạn có chắc chắn muốn xóa',
+            $response->getContent()
+        );
 
         // 2. Member (or Phó chủ nhiệm) requests to leave club -> status becomes CHO_DUYET_ROI
         $this->actingAs($manager)

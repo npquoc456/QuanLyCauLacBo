@@ -130,7 +130,6 @@
                 <div class="club-member-heading">
                     <span>Thành viên / MSSV</span>
                     <span>Ban chuyên môn / Vai trò</span>
-                    <span>Điểm rèn luyện</span>
                     <span>Trạng thái</span>
                     <span>Thao tác</span>
                 </div>
@@ -140,6 +139,10 @@
                         $memberStatus = $membership->TrangThai?->value ?? 'CHUA_CAP_NHAT';
                         $hasManagementRight = app(\App\Services\CauLacBoService::class)->isManagementRole($membership->ChucVu);
                         $isSelf = (int) $member->MaNguoiDung === (int) (auth()->id() ?? 0);
+                        $isOfficialMember = in_array($memberStatus, [
+                            \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value,
+                            \App\Enums\ThanhVienTrangThai::TAM_NGHI->value,
+                        ], true);
                     @endphp
                     <article class="club-member-row">
                         <div class="club-member-identity">
@@ -161,10 +164,6 @@
                                 <span class="manager-role-badge">Quyền quản lý</span>
                             @endif
                             <small>{{ $membership->NgayThamGia?->format('d/m/Y') ?? 'Chưa cập nhật ngày tham gia' }}</small>
-                        </div>
-                        <div class="club-member-points">
-                            <strong>—</strong>
-                            <small>Chưa có dữ liệu</small>
                         </div>
                         <span class="checkin-badge {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'checkin-open' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'checkin-pending' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value ? 'checkin-leave' : '')) }}">
                             <i></i>{{ $formatMemberStatus($memberStatus) }}
@@ -279,7 +278,7 @@
                                         <button type="button" class="btn-member-action btn-member-leave" onclick="alert('Bạn đang là Chủ nhiệm của câu lạc bộ. Để rời câu lạc bộ, bạn cần chuyển giao quyền Chủ nhiệm cho thành viên khác trước.');" title="Chủ nhiệm không thể rời CLB khi chưa chuyển nhượng quyền">
                                             Rời CLB
                                         </button>
-                                    @else
+                                    @elseif ($isOfficialMember)
                                         <form action="{{ route('caulacbo.members.requestLeave', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn muốn gửi yêu cầu rời câu lạc bộ? Quyết định sẽ chờ Chủ quản phê duyệt.');">
                                             @csrf
                                             <button type="submit" class="btn-member-action btn-member-leave" title="Gửi yêu cầu rời câu lạc bộ">
@@ -287,7 +286,7 @@
                                             </button>
                                         </form>
                                     @endif
-                                @elseif ($isOwner ?? false)
+                                @elseif (($isOwner ?? false) && $isOfficialMember)
                                     <form action="{{ route('caulacbo.members.destroy', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thành viên {{ $member->HoTen }} khỏi câu lạc bộ không?');">
                                         @csrf
                                         @method('DELETE')

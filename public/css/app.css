@@ -425,7 +425,7 @@ h1 { margin: 0; color: var(--text); font: 900 clamp(21px, 2.4vw, 27px)/1.2 'Nuni
 .club-members-layout .event-overview { padding-top: 13px; }
 .club-members-panel { min-width: 0; padding: 12px; }
 .club-member-table { display: grid; min-width: 0; }
-.club-member-heading, .club-member-row { display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(110px, 1fr) minmax(65px, .5fr) minmax(95px, auto) minmax(160px, auto); align-items: center; gap: 8px; padding: 10px 8px; }
+.club-member-heading, .club-member-row { display: grid; grid-template-columns: minmax(170px, 1.4fr) minmax(140px, 1.1fr) minmax(105px, auto) minmax(210px, 1.3fr); align-items: center; gap: 8px; padding: 10px 8px; }
 .club-member-heading { min-height: 34px; border-bottom: 1px solid var(--line); color: var(--text-faint); font-size: 7px; font-weight: 800; text-transform: uppercase; }
 .club-member-row { min-height: 68px; border-bottom: 1px solid var(--line); }
 .club-member-row:last-child { border-bottom: 0; }
@@ -645,7 +645,7 @@ html[data-theme='dark'] .attendance-status.is-open { color: #9be4c2; background:
     .club-row-actions { justify-content: flex-start; }
     .club-members-layout .overview-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .club-member-heading { grid-template-columns: minmax(0, 1fr) auto; }
-    .club-member-heading > :nth-child(2), .club-member-heading > :nth-child(3), .club-member-heading > :nth-child(5) { display: none; }
+    .club-member-heading > :nth-child(2), .club-member-heading > :nth-child(4) { display: none; }
     .club-member-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
     .club-member-role { grid-column: 1; padding-left: 39px; }
     .club-member-points { display: none; }
@@ -669,7 +669,7 @@ html[data-theme='dark'] .attendance-status.is-open { color: #9be4c2; background:
     .club-members-intro h1 { font-size: 19px; }
     .club-members-panel { padding: 8px; }
     .club-member-heading, .club-member-row { padding-inline: 4px; }
-    .club-member-heading > :nth-child(4) { text-align: right; }
+    .club-member-heading > :nth-child(3) { text-align: right; }
     .club-members-pagination { align-items: flex-start; flex-direction: column; }
     .club-members-pagination nav { margin-left: 0; }
     .club-section-tabs { margin-block: 14px 18px; }
