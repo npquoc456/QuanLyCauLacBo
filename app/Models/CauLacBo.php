@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\CauLacBoTrangThai;
+use App\Traits\NormalizesStorageUrls;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CauLacBo extends Model
 {
+    use NormalizesStorageUrls;
     protected $table = 'cau_lac_bos';
 
     protected $primaryKey = 'MaCLB';
@@ -54,5 +56,25 @@ class CauLacBo extends Model
     public function suKiens(): HasMany
     {
         return $this->hasMany(SuKien::class, 'MaCLB', 'MaCLB');
+    }
+
+    public function getURLLogoAttribute(?string $value): ?string
+    {
+        return self::normalizeStorageUrl($value);
+    }
+
+    public function setURLLogoAttribute(?string $value): void
+    {
+        $this->attributes['URLLogo'] = self::normalizeStorageUrl($value);
+    }
+
+    public function getURLAnhNenAttribute(?string $value): ?string
+    {
+        return self::normalizeStorageUrl($value);
+    }
+
+    public function setURLAnhNenAttribute(?string $value): void
+    {
+        $this->attributes['URLAnhNen'] = self::normalizeStorageUrl($value);
     }
 }

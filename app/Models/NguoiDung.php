@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\NguoiDungTrangThai;
 use App\Enums\NguoiDungVaiTro;
+use App\Traits\NormalizesStorageUrls;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 class NguoiDung extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, NormalizesStorageUrls;
 
     protected $table = 'nguoi_dungs';
 
@@ -76,5 +77,15 @@ class NguoiDung extends Authenticatable
     public function registrations(): HasMany
     {
         return $this->hasMany(DangKy::class, 'MaNguoiDung', 'MaNguoiDung');
+    }
+
+    public function getURLAnhDaiDienAttribute(?string $value): ?string
+    {
+        return self::normalizeStorageUrl($value);
+    }
+
+    public function setURLAnhDaiDienAttribute(?string $value): void
+    {
+        $this->attributes['URLAnhDaiDien'] = self::normalizeStorageUrl($value);
     }
 }

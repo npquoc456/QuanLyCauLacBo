@@ -137,11 +137,11 @@
                     <article class="home-recruitment-card">
                         <div class="home-recruitment-art">
                             @if ($recruitment->URLPoster)
-                                <img src="{{ asset($recruitment->URLPoster) }}" alt="Poster {{ $recruitment->TenDotTuyen }}">
+                                <img src="{{ asset($recruitment->URLPoster) }}" alt="Poster {{ $recruitment->TenDotTuyen }}" onerror="this.onerror=null;this.src='{{ asset('image/img.png') }}';">
                             @elseif ($recruitment->cauLacBo->URLAnhNen)
-                                <img src="{{ $recruitment->cauLacBo->URLAnhNen }}" alt="Ảnh bìa {{ $recruitment->cauLacBo->TenCLB }}">
+                                <img src="{{ $recruitment->cauLacBo->URLAnhNen }}" alt="Ảnh bìa {{ $recruitment->cauLacBo->TenCLB }}" onerror="this.onerror=null;this.src='{{ asset('image/img.png') }}';">
                             @elseif ($recruitment->cauLacBo->URLLogo)
-                                <img src="{{ $recruitment->cauLacBo->URLLogo }}" alt="Logo {{ $recruitment->cauLacBo->TenCLB }}">
+                                <img src="{{ $recruitment->cauLacBo->URLLogo }}" alt="Logo {{ $recruitment->cauLacBo->TenCLB }}" onerror="this.onerror=null;this.src='{{ asset('image/img.png') }}';">
                             @else
                                 <div class="home-recruitment-placeholder" aria-hidden="true"></div>
                             @endif

@@ -547,14 +547,14 @@ class CauLacBoService
             return;
         }
 
-        $publicDisk = Storage::disk('public');
-        $path = ltrim(substr($url, strlen($publicDisk->url(''))), '/');
+        $parsedPath = parse_url($url, PHP_URL_PATH) ?? $url;
+        $path = ltrim((string) preg_replace('#^/storage/#', '', $parsedPath), '/');
 
-        if (! str_starts_with($url, $publicDisk->url('clubs/'))
-            || ! preg_match('#^clubs/(?:logos|backgrounds)/[A-Za-z0-9._-]+$#', $path)) {
+        if (! preg_match('#^clubs/(?:logos|backgrounds)/[A-Za-z0-9._-]+$#', $path)) {
             return;
         }
 
+        $publicDisk = Storage::disk('public');
         if ($publicDisk->exists($path) && ! $publicDisk->delete($path)) {
             Log::warning('Could not delete a replaced club image.', ['path' => $path]);
         }

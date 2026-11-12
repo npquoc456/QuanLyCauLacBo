@@ -127,12 +127,11 @@
                     </label>
                     <div class="select-dropdown-wrapper">
                         <select class="form-select-input" id="field-trang-thai" name="TrangThai">
-                            <option value="DANG_TUYEN" @selected(old('TrangThai', $campaign->TrangThai?->value ?? 'DANG_TUYEN') === 'DANG_TUYEN')>
-                                DANG_TUYEN (Đang mở nhận đơn)
-                            </option>
-                            <option value="CHUA_TUYEN" @selected(old('TrangThai', $campaign->TrangThai?->value ?? '') === 'CHUA_TUYEN')>
-                                CHUA_TUYEN (Chưa mở nhận đơn)
-                            </option>
+                            @foreach (\App\Enums\DotTuyenTrangThai::cases() as $dotTuyenStatus)
+                                <option value="{{ $dotTuyenStatus->value }}" @selected(old('TrangThai', $campaign->TrangThai?->value ?? 'DANG_TUYEN') === $dotTuyenStatus->value)>
+                                    {{ $dotTuyenStatus->label() }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                 </div>

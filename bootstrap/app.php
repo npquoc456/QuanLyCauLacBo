@@ -13,8 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-    // Thêm dòng này để báo Laravel tin tưởng HTTPS từ máy chủ Render
+         // Thêm dòng này để báo Laravel tin tưởng HTTPS từ máy chủ Render
          $middleware->trustProxies(at: '*');
+         $middleware->redirectTo(
+             guests: '/dang-nhap',
+             users: '/'
+         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

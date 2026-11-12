@@ -14,7 +14,7 @@
 
         <section class="recruitment-public-hero">
             @if ($campaign->URLPoster)
-                <img src="{{ asset($campaign->URLPoster) }}" alt="Poster {{ $campaign->TenDotTuyen }}">
+                <img src="{{ asset($campaign->URLPoster) }}" alt="Poster {{ $campaign->TenDotTuyen }}" onerror="this.onerror=null;this.src='{{ asset('image/img.png') }}';">
             @else
                 <div class="recruitment-public-poster-placeholder"></div>
             @endif
@@ -70,7 +70,8 @@
             </main>
             <aside class="recruitment-public-club-card">
                 @if ($campaign->cauLacBo->URLLogo)
-                    <img src="{{ $campaign->cauLacBo->URLLogo }}" alt="Logo {{ $campaign->cauLacBo->TenCLB }}">
+                    <img src="{{ $campaign->cauLacBo->URLLogo }}" alt="Logo {{ $campaign->cauLacBo->TenCLB }}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                    <span class="recruitment-public-club-mark" style="display: none;">♧</span>
                 @else
                     <span class="recruitment-public-club-mark">♧</span>
                 @endif

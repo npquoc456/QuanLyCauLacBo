@@ -136,7 +136,8 @@
                     <article class="club-member-row">
                         <div class="club-member-identity">
                             @if ($member->URLAnhDaiDien)
-                                <img src="{{ $member->URLAnhDaiDien }}" alt="" loading="lazy">
+                                <img src="{{ $member->URLAnhDaiDien }}" alt="" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                                <span style="display: none;">{{ mb_strtoupper(mb_substr($member->HoTen, 0, 1)) }}</span>
                             @else
                                 <span>{{ mb_strtoupper(mb_substr($member->HoTen, 0, 1)) }}</span>
                             @endif

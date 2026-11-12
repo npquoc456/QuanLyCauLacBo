@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DotTuyenTrangThai;
+use App\Traits\NormalizesStorageUrls;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DotTuyenThanhVien extends Model
 {
+    use NormalizesStorageUrls;
     protected $table = 'dot_tuyen_thanh_viens';
 
     protected $primaryKey = 'MaDotTuyen';
@@ -76,5 +78,15 @@ class DotTuyenThanhVien extends Model
     public function viTriTuyens(): HasMany
     {
         return $this->hasMany(ViTriTuyen::class, 'MaDotTuyen', 'MaDotTuyen');
+    }
+
+    public function getURLPosterAttribute(?string $value): ?string
+    {
+        return self::normalizeStorageUrl($value);
+    }
+
+    public function setURLPosterAttribute(?string $value): void
+    {
+        $this->attributes['URLPoster'] = self::normalizeStorageUrl($value);
     }
 }

@@ -54,7 +54,8 @@
                     <span class="profile-copy"><strong>{{ auth()->user()->HoTen }}</strong><small>{{ auth()->user()->TenTaiKhoan }}</small></span>
                     <span class="profile-avatar" aria-hidden="true">
                         @if (auth()->user()->URLAnhDaiDien)
-                            <img src="{{ auth()->user()->URLAnhDaiDien }}" alt="">
+                            <img src="{{ auth()->user()->URLAnhDaiDien }}" alt="" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                            <span class="profile-avatar-fallback" style="display: none;">{{ mb_strtoupper(mb_substr(auth()->user()->HoTen, 0, 1)) }}</span>
                         @else
                             {{ mb_strtoupper(mb_substr(auth()->user()->HoTen, 0, 1)) }}
                         @endif

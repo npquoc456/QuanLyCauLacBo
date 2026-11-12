@@ -231,7 +231,7 @@
             <span class="sync-icon">👥</span>
             <div>
                 <strong>Đồng bộ tự động cổng đăng ký sinh viên</strong>
-                <span>Mọi đợt tuyển có trạng thái DANG_TUYEN sẽ ngay lập tức được xuất bản công khai lên Cổng Đăng ký để ứng viên nộp CV trực tuyến.</span>
+                <span>Mọi đợt tuyển có trạng thái Đang mở tuyển sẽ ngay lập tức được xuất bản công khai lên Cổng Đăng ký để ứng viên nộp CV trực tuyến.</span>
             </div>
         </div>
         <a class="event-action" style="padding: 0 10px; font-weight: 700; color: #2563eb; border-color: #bfdbfe; background: #eff6ff; text-decoration: none;" href="{{ route('home') }}">

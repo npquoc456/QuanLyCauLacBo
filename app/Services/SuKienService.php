@@ -203,15 +203,18 @@ class SuKienService
 
     private function deleteStoredBackgroundImage(?string $url): void
     {
-        $publicDisk = Storage::disk('public');
-        $managedUrlPrefix = $publicDisk->url('events/backgrounds/');
-
-        if ($url === null || ! str_starts_with($url, $managedUrlPrefix)) {
+        if ($url === null) {
             return;
         }
 
-        $path = ltrim(substr($url, strlen($publicDisk->url(''))), '/');
+        $parsedPath = parse_url($url, PHP_URL_PATH) ?? $url;
+        $path = ltrim(preg_replace('#^/storage/#', '', $parsedPath), '/');
 
+        if (! str_starts_with($path, 'events/backgrounds/')) {
+            return;
+        }
+
+        $publicDisk = Storage::disk('public');
         if ($path !== '' && $publicDisk->exists($path) && ! $publicDisk->delete($path)) {
             Log::warning('Could not delete replaced event background image.', ['path' => $path]);
         }

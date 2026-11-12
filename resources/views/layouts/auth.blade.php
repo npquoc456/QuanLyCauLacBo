@@ -6,6 +6,7 @@
     <meta name="color-scheme" content="light dark">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') | UniClub</title>
+    <link href="{{ asset('css/flatpickr.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <script>
         (function() {
@@ -19,6 +20,8 @@
             }
         })();
     </script>
+    <script src="{{ asset('js/flatpickr.min.js') }}"></script>
+    <script src="{{ asset('js/flatpickr.vn.js') }}"></script>
     <script src="{{ asset('js/app.js') }}" defer></script>
     <script src="{{ asset('js/auth.js') }}" defer></script>
 </head>

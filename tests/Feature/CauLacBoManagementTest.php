@@ -12,6 +12,7 @@ use App\Models\ThanhVienCLB;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -19,6 +20,32 @@ use Tests\TestCase;
 class CauLacBoManagementTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected NguoiDung $adminUser;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->adminUser = NguoiDung::create([
+            'TenTaiKhoan' => 'testclbadmin',
+            'MatKhauHash' => Hash::make('password123'),
+            'MSSV' => 'SVADMIN01',
+            'HoTen' => 'CLB Admin Tester',
+            'Email' => 'clbadmin@test.com',
+            'NgaySinh' => '2000-01-01',
+            'VaiTro' => NguoiDungVaiTro::ADMIN,
+            'TrangThai' => NguoiDungTrangThai::HOAT_DONG,
+        ]);
+        $this->actingAs($this->adminUser, 'web');
+    }
+
+    public function test_unauthenticated_guests_cannot_access_club_management(): void
+    {
+        Auth::logout();
+        $this->get(route('caulacbo.index'))->assertRedirect(route('login'));
+        $this->get('/caulacbo/1/thanh-vien')->assertRedirect(route('login'));
+    }
 
     public function test_management_page_shows_club_summary_and_creates_a_club(): void
     {

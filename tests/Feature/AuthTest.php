@@ -220,7 +220,7 @@ class AuthTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('<img src="'.$user->URLAnhDaiDien.'" alt="">', false);
+            ->assertSee($user->URLAnhDaiDien, false);
     }
 
     public function test_profile_update_rejects_duplicate_identity_fields_and_invalid_avatars(): void

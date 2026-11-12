@@ -10,20 +10,31 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::get('/dang-nhap', [AuthPageController::class, 'login'])->name('login');
 Route::get('/dang-ky', [AuthPageController::class, 'register'])->name('register');
-Route::get('/cai-dat', [AuthPageController::class, 'settings'])->name('settings');
-Route::put('/cai-dat', [AuthPageController::class, 'updateSettings'])->middleware('auth')->name('settings.update');
-Route::post('/dang-xuat', [AuthPageController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::get('caulacbo/{caulacbo}/thanh-vien', [CauLacBoController::class, 'members'])
-    ->whereNumber('caulacbo')
-    ->name('caulacbo.members');
+// Tuyến đường fallback phục vụ tệp storage khi symlink bị lỗi trên môi trường triển khai
+Route::get('/storage/{path}', function (string $path) {
+    $fullPath = storage_path('app/public/'.$path);
+    if (! file_exists($fullPath)) {
+        abort(404);
+    }
 
-Route::patch('caulacbo/{caulacbo}/thanh-vien/{thanhVien}', [CauLacBoController::class, 'updateMember'])
-    ->whereNumber('caulacbo')
-    ->whereNumber('thanhVien')
-    ->name('caulacbo.members.update');
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.fallback');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/cai-dat', [AuthPageController::class, 'settings'])->name('settings');
+    Route::put('/cai-dat', [AuthPageController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/dang-xuat', [AuthPageController::class, 'logout'])->name('logout');
+
+    Route::get('caulacbo/{caulacbo}/thanh-vien', [CauLacBoController::class, 'members'])
+        ->whereNumber('caulacbo')
+        ->name('caulacbo.members');
+
+    Route::patch('caulacbo/{caulacbo}/thanh-vien/{thanhVien}', [CauLacBoController::class, 'updateMember'])
+        ->whereNumber('caulacbo')
+        ->whereNumber('thanhVien')
+        ->name('caulacbo.members.update');
+
     Route::get('caulacbo/{caulacbo}/dot-tuyen', [DotTuyenController::class, 'index'])
         ->whereNumber('caulacbo')
         ->name('caulacbo.recruitments.index');
@@ -64,18 +75,17 @@ Route::middleware('auth')->group(function () {
     Route::post('dot-tuyen/{dotTuyen}/ung-tuyen', [DotTuyenController::class, 'apply'])
         ->whereNumber('dotTuyen')
         ->name('dot-tuyen.apply');
+
+    Route::get('dot-tuyen/{dotTuyen}', [DotTuyenController::class, 'show'])
+        ->whereNumber('dotTuyen')
+        ->name('dot-tuyen.show');
+
+    Route::resource('caulacbo', CauLacBoController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->whereNumber('caulacbo');
+
+    Route::post('sukien/bulk', [SuKienController::class, 'bulk'])->name('sukien.bulk');
+    Route::get('sukien/{id}/diem-danh', [SuKienController::class, 'attendance'])->whereNumber('id')->name('sukien.attendance');
+    Route::get('sukien/{id}', [SuKienController::class, 'show'])->whereNumber('id')->name('sukien.show');
+    Route::resource('sukien', SuKienController::class)->except('show');
 });
-
-Route::get('dot-tuyen/{dotTuyen}', [DotTuyenController::class, 'show'])
-    ->whereNumber('dotTuyen')
-    ->name('dot-tuyen.show');
-
-Route::resource('caulacbo', CauLacBoController::class)
-    ->only(['index', 'store', 'update', 'destroy'])
-    ->whereNumber('caulacbo');
-
-Route::post('sukien/bulk', [SuKienController::class, 'bulk'])->name('sukien.bulk');
-Route::get('sukien/{id}/diem-danh', [SuKienController::class, 'attendance'])->whereNumber('id')->name('sukien.attendance');
-Route::get('sukien/{id}', [SuKienController::class, 'show'])->whereNumber('id')->name('sukien.show');
-
-Route::resource('sukien', SuKienController::class)->except('show');

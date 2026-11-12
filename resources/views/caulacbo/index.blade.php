@@ -123,7 +123,8 @@
                     <article class="club-row" id="club-{{ $club->MaCLB }}">
                         <div class="club-row-main">
                             @if($club->URLLogo)
-                                <img class="club-logo" src="{{ $club->URLLogo }}" alt="Logo {{ $club->TenCLB }}" loading="lazy">
+                                <img class="club-logo" src="{{ $club->URLLogo }}" alt="Logo {{ $club->TenCLB }}" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                                <span class="club-logo club-logo-fallback" aria-hidden="true" style="display: none;">{{ mb_strtoupper(mb_substr($club->TenCLB, 0, 1)) }}</span>
                             @else
                                 <span class="club-logo club-logo-fallback" aria-hidden="true">{{ mb_strtoupper(mb_substr($club->TenCLB, 0, 1)) }}</span>
                             @endif

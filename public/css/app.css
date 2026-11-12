@@ -2856,3 +2856,58 @@ html[data-theme='dark'] .form-btn-white {
 .recruitment-secondary-button:hover {
     background: #e2e8f0;
 }
+
+/* Flatpickr Theme Customization for UniClub */
+.flatpickr-calendar {
+    font-family: inherit !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid var(--line) !important;
+    background: var(--surface) !important;
+}
+.flatpickr-calendar .flatpickr-months {
+    background: var(--surface-soft) !important;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+.flatpickr-calendar .flatpickr-month,
+.flatpickr-calendar .flatpickr-current-month,
+.flatpickr-calendar .flatpickr-current-month input.cur-year,
+.flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
+    color: var(--text) !important;
+    fill: var(--text) !important;
+    font-weight: 700 !important;
+}
+.flatpickr-calendar span.flatpickr-weekday {
+    color: var(--text-soft) !important;
+    font-weight: 600 !important;
+}
+.flatpickr-calendar .flatpickr-day {
+    color: var(--text) !important;
+    border-radius: 8px !important;
+}
+.flatpickr-calendar .flatpickr-day:hover {
+    background: var(--surface-soft) !important;
+}
+.flatpickr-calendar .flatpickr-day.selected {
+    background: var(--blue) !important;
+    border-color: var(--blue) !important;
+    color: #fff !important;
+}
+.flatpickr-calendar .flatpickr-day.today {
+    border-color: var(--brand-green) !important;
+}
+html[data-theme='dark'] .flatpickr-calendar {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4) !important;
+}
+html[data-theme='dark'] .flatpickr-calendar .flatpickr-months {
+    background: var(--surface-soft) !important;
+}
+html[data-theme='dark'] .flatpickr-day.flatpickr-disabled {
+    color: rgba(255, 255, 255, 0.2) !important;
+}
+.flatpickr-custom-input {
+    cursor: pointer !important;
+}

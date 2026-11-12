@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Enums\SuKienLoai;
 use App\Enums\SuKienPhanLoaiNoiBo;
 use App\Enums\SuKienTrangThai;
+use App\Traits\NormalizesStorageUrls;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class SuKien extends Model
 {
+    use NormalizesStorageUrls;
     protected $table = 'su_kiens';
 
     protected $primaryKey = 'MaSuKien';
@@ -84,5 +86,15 @@ class SuKien extends Model
     public function cauLacBo(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(CauLacBo::class, 'MaCLB', 'MaCLB');
+    }
+
+    public function getURLAnhNenAttribute(?string $value): ?string
+    {
+        return self::normalizeStorageUrl($value);
+    }
+
+    public function setURLAnhNenAttribute(?string $value): void
+    {
+        $this->attributes['URLAnhNen'] = self::normalizeStorageUrl($value);
     }
 }

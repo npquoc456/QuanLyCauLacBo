@@ -2,12 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Enums\NguoiDungTrangThai;
+use App\Enums\NguoiDungVaiTro;
 use App\Enums\SuKienTrangThai;
+use App\Models\NguoiDung;
 use App\Models\SuKien;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -16,11 +21,31 @@ class ExampleTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected NguoiDung $testUser;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->testUser = NguoiDung::create([
+            'TenTaiKhoan' => 'testeventadmin',
+            'MatKhauHash' => Hash::make('password123'),
+            'MSSV' => 'SVADMIN02',
+            'HoTen' => 'Admin Event Tester',
+            'Email' => 'adminevent@test.com',
+            'NgaySinh' => '2000-01-01',
+            'VaiTro' => NguoiDungVaiTro::ADMIN,
+            'TrangThai' => NguoiDungTrangThai::HOAT_DONG,
+        ]);
+        $this->actingAs($this->testUser, 'web');
+    }
+
     /**
      * A basic test example.
      */
     public function test_the_application_returns_a_successful_response(): void
     {
+        Auth::logout();
         $response = $this->get('/');
 
         $response->assertOk()
@@ -32,6 +57,16 @@ class ExampleTest extends TestCase
             ->assertDontSee('CodeStorm')
             ->assertDontSee('club-volunteer.svg')
             ->assertDontSee('club-language.svg');
+    }
+
+    public function test_guests_are_redirected_to_login_for_protected_pages(): void
+    {
+        Auth::logout();
+
+        $this->get(route('caulacbo.index'))->assertRedirect(route('login'));
+        $this->get(route('sukien.index'))->assertRedirect(route('login'));
+        $this->get(route('settings'))->assertRedirect(route('login'));
+        $this->get('/caulacbo/1/dot-tuyen')->assertRedirect(route('login'));
     }
 
     public function test_the_event_list_routes_event_creation_through_club_management(): void

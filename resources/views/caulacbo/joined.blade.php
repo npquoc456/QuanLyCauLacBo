@@ -53,7 +53,8 @@
                 <article class="club-joined-row">
                     <div class="club-joined-main">
                         @if ($cauLacBo->URLLogo)
-                            <img class="club-joined-avatar" src="{{ $cauLacBo->URLLogo }}" alt="Logo {{ $cauLacBo->TenCLB }}" loading="lazy">
+                            <img class="club-joined-avatar" src="{{ $cauLacBo->URLLogo }}" alt="Logo {{ $cauLacBo->TenCLB }}" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                            <span class="club-joined-avatar" aria-hidden="true" style="display: none;">{{ mb_strtoupper(mb_substr($cauLacBo->TenCLB, 0, 1)) }}</span>
                         @else
                             <span class="club-joined-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($cauLacBo->TenCLB, 0, 1)) }}</span>
                         @endif

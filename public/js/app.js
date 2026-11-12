@@ -198,3 +198,39 @@ bulkForm?.addEventListener('submit', (event) => {
 });
 
 updateSelection();
+
+// Khởi tạo Flatpickr cho các trường ngày tháng định dạng dd/mm/yyyy chuẩn Việt Nam
+const initFlatpickr = () => {
+    if (typeof flatpickr === 'undefined') return;
+
+    if (flatpickr.locales && flatpickr.locales.vn) {
+        flatpickr.localize(flatpickr.locales.vn);
+    }
+
+    document.querySelectorAll('input[type="date"]').forEach((input) => {
+        if (input._flatpickr) return;
+
+        flatpickr(input, {
+            altInput: true,
+            altFormat: 'd/m/Y',
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+            altInputClass: (input.className ? input.className + ' ' : '') + 'flatpickr-custom-input',
+            onReady: function(selectedDates, dateStr, instance) {
+                if (instance.altInput) {
+                    instance.altInput.placeholder = 'dd/mm/yyyy';
+                }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                instance.element.dispatchEvent(new Event('input', { bubbles: true }));
+                instance.element.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    });
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFlatpickr);
+} else {
+    initFlatpickr();
+}
