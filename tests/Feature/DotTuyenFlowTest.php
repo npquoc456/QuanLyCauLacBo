@@ -178,12 +178,13 @@ class DotTuyenFlowTest extends TestCase
             ->where('MaNguoiDung', $applicant->MaNguoiDung)
             ->firstOrFail();
 
-        // Trang quản lý thành viên hiển thị ứng viên ở mục Chờ phê duyệt và có nút Duyệt chính thức
+        // Trang quản lý thành viên hiển thị ứng viên ở mục Chờ phê duyệt và có 2 nút: Phê duyệt và Từ chối
         $this->actingAs($manager)
             ->get(route('caulacbo.members', $club->MaCLB))
             ->assertOk()
             ->assertSee('Chờ phê duyệt')
-            ->assertSee('✓ Duyệt chính thức')
+            ->assertSee('Phê duyệt')
+            ->assertSee('Từ chối')
             ->assertSee($applicant->HoTen);
 
         // Sau khi phỏng vấn xong, ban quản lý duyệt chính thức thành viên
@@ -198,6 +199,14 @@ class DotTuyenFlowTest extends TestCase
             'MaThanhVien' => $membership->MaThanhVien,
             'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG->value,
         ]);
+
+        // Sau khi duyệt chính thức, nút Cấp quyền xuất hiện, không còn nút Phê duyệt / Từ chối
+        $this->actingAs($manager)
+            ->get(route('caulacbo.members', $club->MaCLB))
+            ->assertOk()
+            ->assertSee('Đang hoạt động')
+            ->assertSee('Cấp quyền')
+            ->assertDontSee('Từ chối');
     }
 
     public function test_draft_recruitment_is_not_visible_to_applicants_and_other_users_cannot_manage_club(): void
@@ -312,6 +321,62 @@ class DotTuyenFlowTest extends TestCase
             ->assertSee('applicant_flow@example.test')
             ->assertSee('Em có kinh nghiệm về Python và mong muốn tham gia ban AI.')
             ->assertSee('Tải hồ sơ đính kèm');
+    }
+
+    public function test_manager_can_reject_pending_applicant_from_members_list(): void
+    {
+        $manager = $this->createUser('manager_rej', 'manager_rej@example.test', '24003001');
+        $applicant = $this->createUser('applicant_rej', 'applicant_rej@example.test', '24003002');
+        $club = $this->createManagedClub($manager);
+        $campaign = $this->createOpenCampaign($club);
+        $position = $campaign->viTriTuyens()->create([
+            'TenViTri' => 'Thành viên Ban Kỹ thuật',
+            'Mota' => 'Phát triển web và hệ thống',
+            'SoLuong' => 2,
+        ]);
+
+        $application = DonUngTuyen::create([
+            'MaViTri' => $position->MaViTri,
+            'MaNguoiUngTuyen' => $applicant->MaNguoiDung,
+            'NoiDung' => 'Ứng tuyển.',
+            'TrangThai' => DonUngTrangThai::DA_DUYET,
+            'NgayNopDon' => now(),
+            'NgayCapNhat' => now(),
+        ]);
+
+        app(\App\Services\CauLacBoService::class)->syncPendingMembersFromApprovedApplications($club->MaCLB);
+
+        $membership = ThanhVienCLB::query()
+            ->where('MaCLB', $club->MaCLB)
+            ->where('MaNguoiDung', $applicant->MaNguoiDung)
+            ->firstOrFail();
+
+        $this->assertEquals(ThanhVienTrangThai::CHO_PHE_DUYET, $membership->TrangThai);
+
+        // Ban quản lý từ chối ứng viên sau phỏng vấn
+        $this->actingAs($manager)
+            ->patch(route('caulacbo.members.update', [$club->MaCLB, $membership->MaThanhVien]), [
+                'ChucVu' => 'Thành viên Ban Kỹ thuật',
+                'TrangThai' => ThanhVienTrangThai::DA_ROI_CLB->value,
+            ])
+            ->assertRedirect(route('caulacbo.members', $club->MaCLB));
+
+        // Trạng thái thành viên cập nhật sang DA_ROI_CLB và đơn ứng tuyển chuyển sang TU_CHOI
+        $this->assertDatabaseHas('thanh_vien_c_l_b_s', [
+            'MaThanhVien' => $membership->MaThanhVien,
+            'TrangThai' => ThanhVienTrangThai::DA_ROI_CLB->value,
+        ]);
+        $this->assertDatabaseHas('don_ung_tuyens', [
+            'MaDon' => $application->MaDon,
+            'TrangThai' => DonUngTrangThai::TU_CHOI->value,
+        ]);
+
+        // Không còn hiển thị trong danh sách thành viên của CLB (chỉ còn lại 1 thành viên là manager)
+        $this->actingAs($manager)
+            ->get(route('caulacbo.members', $club->MaCLB))
+            ->assertOk()
+            ->assertSee('Hiển thị 1–1 trong 1 thành viên')
+            ->assertDontSee('applicant_rej@example.test');
     }
 
     /**

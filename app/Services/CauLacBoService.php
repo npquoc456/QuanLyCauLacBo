@@ -355,6 +355,17 @@ class CauLacBoService
 
         if ($status !== null && ThanhVienTrangThai::tryFrom($status) !== null) {
             $membership->TrangThai = ThanhVienTrangThai::from($status);
+
+            if ($membership->TrangThai === ThanhVienTrangThai::DA_ROI_CLB && $membership->MaNguoiDung) {
+                DonUngTuyen::query()
+                    ->where('MaNguoiUngTuyen', $membership->MaNguoiDung)
+                    ->whereHas('viTri.dotTuyen', fn ($builder) => $builder->where('MaCLB', $clubId))
+                    ->where('TrangThai', DonUngTrangThai::DA_DUYET->value)
+                    ->update([
+                        'TrangThai' => DonUngTrangThai::TU_CHOI->value,
+                        'NgayCapNhat' => now(),
+                    ]);
+            }
         }
 
         $membership->save();

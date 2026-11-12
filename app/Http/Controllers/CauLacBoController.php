@@ -103,15 +103,22 @@ class CauLacBoController extends Controller
             'TrangThai' => ['sometimes', 'nullable', 'string', Rule::enum(ThanhVienTrangThai::class)],
         ]);
 
+        $status = $validated['TrangThai'] ?? null;
         $this->cauLacBoService->updateMemberRole(
             (int) $caulacbo,
             (int) $thanhVien,
             $validated['ChucVu'],
-            $validated['TrangThai'] ?? null,
+            $status,
         );
+
+        $message = match ($status) {
+            ThanhVienTrangThai::DANG_HOAT_DONG->value => 'Đã phê duyệt chính thức thành viên vào câu lạc bộ.',
+            ThanhVienTrangThai::DA_ROI_CLB->value => 'Đã từ chối tiếp nhận ứng viên vào câu lạc bộ.',
+            default => 'Đã cập nhật vai trò và quyền hạn của thành viên.',
+        };
 
         return redirect()
             ->route('caulacbo.members', $caulacbo)
-            ->with('success', 'Đã cập nhật vai trò và quyền hạn của thành viên.');
+            ->with('success', $message);
     }
 }

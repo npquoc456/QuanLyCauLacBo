@@ -169,68 +169,78 @@
                                         @method('PATCH')
                                         <input type="hidden" name="ChucVu" value="{{ $membership->ChucVu ?: 'Thành viên' }}">
                                         <input type="hidden" name="TrangThai" value="{{ \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value }}">
-                                        <button type="submit" class="btn-member-action btn-member-approve" title="Duyệt chính thức thành viên này sau khi hoàn tất phỏng vấn">
-                                            ✓ Duyệt chính thức
+                                        <button type="submit" class="btn-member-action btn-member-approve" title="Phê duyệt chính thức thành viên này">
+                                            Phê duyệt
                                         </button>
                                     </form>
+                                    <form action="{{ route('caulacbo.members.update', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn muốn từ chối ứng viên này không?');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="ChucVu" value="{{ $membership->ChucVu ?: 'Thành viên' }}">
+                                        <input type="hidden" name="TrangThai" value="{{ \App\Enums\ThanhVienTrangThai::DA_ROI_CLB->value }}">
+                                        <button type="submit" class="btn-member-action btn-member-reject" title="Từ chối ứng viên này">
+                                            Từ chối
+                                        </button>
+                                    </form>
+                                @else
+                                    <button type="button" class="btn-member-action" data-open-member-modal="member-modal-{{ $membership->MaThanhVien }}" title="Cấp quyền quản lý hoặc đổi vai trò">
+                                        Cấp quyền
+                                    </button>
+
+                                    <dialog class="event-modal club-modal" id="member-modal-{{ $membership->MaThanhVien }}">
+                                        <section class="event-modal-card">
+                                            <header class="event-modal-header">
+                                                <span class="event-modal-icon" aria-hidden="true">🛡️</span>
+                                                <div>
+                                                    <h2>Cấp quyền &amp; Phân vai trò</h2>
+                                                    <p>{{ $member->HoTen }} · MSSV: {{ $member->MSSV }}</p>
+                                                </div>
+                                                <button type="button" class="event-modal-close" data-close-member-modal aria-label="Đóng">×</button>
+                                            </header>
+                                            <form action="{{ route('caulacbo.members.update', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" class="event-modal-form">
+                                                @csrf
+                                                @method('PATCH')
+                                                <div class="event-modal-body" style="display: grid; gap: 16px; padding: 20px;">
+                                                    <div>
+                                                        <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px;">Chức vụ &amp; Quyền hạn quản lý <span style="color: #ef4444;">*</span></label>
+                                                        <select name="ChucVu" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px;">
+                                                            <optgroup label="⭐ Nhóm Có Quyền Quản Lý CLB (Xem, Tạo sự kiện, Tuyển thành viên)">
+                                                                <option value="Phó chủ nhiệm" {{ $membership->ChucVu === 'Phó chủ nhiệm' ? 'selected' : '' }}>Phó chủ nhiệm (Được quản lý)</option>
+                                                                <option value="Trưởng ban Kỹ thuật" {{ $membership->ChucVu === 'Trưởng ban Kỹ thuật' ? 'selected' : '' }}>Trưởng ban Kỹ thuật (Được quản lý)</option>
+                                                                <option value="Trưởng ban Truyền thông" {{ $membership->ChucVu === 'Trưởng ban Truyền thông' ? 'selected' : '' }}>Trưởng ban Truyền thông (Được quản lý)</option>
+                                                                <option value="Trưởng ban Sự kiện" {{ $membership->ChucVu === 'Trưởng ban Sự kiện' ? 'selected' : '' }}>Trưởng ban Sự kiện (Được quản lý)</option>
+                                                                <option value="Quản lý" {{ $membership->ChucVu === 'Quản lý' ? 'selected' : '' }}>Quản lý CLB (Được quản lý)</option>
+                                                                @if($isOwner ?? true)
+                                                                    <option value="Chủ nhiệm" {{ in_array($membership->ChucVu, ['Chủ nhiệm', 'CHU_NHIEM']) ? 'selected' : '' }}>Chủ nhiệm (Chủ sở hữu CLB)</option>
+                                                                @endif
+                                                            </optgroup>
+                                                            <optgroup label="👤 Nhóm Thành Viên (Chỉ tham gia, không có quyền quản lý)">
+                                                                <option value="Thành viên" {{ in_array($membership->ChucVu, ['Thành viên', 'THANH_VIEN']) ? 'selected' : '' }}>Thành viên</option>
+                                                                <option value="Cộng tác viên" {{ in_array($membership->ChucVu, ['Cộng tác viên', 'CTV']) ? 'selected' : '' }}>Cộng tác viên</option>
+                                                            </optgroup>
+                                                        </select>
+                                                        <p style="margin: 6px 0 0; font-size: 11px; color: var(--text-faint); line-height: 1.4;">
+                                                            Gán vai trò trong nhóm <strong>Có Quyền Quản Lý</strong> sẽ cho phép thành viên này quản lý câu lạc bộ, đăng bài đợt tuyển và tạo sự kiện.
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px;">Trạng thái hoạt động</label>
+                                                        <select name="TrangThai" style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px;">
+                                                            <option value="DANG_HOAT_DONG" {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'selected' : '' }}>Đang hoạt động (Kích hoạt quyền)</option>
+                                                            <option value="CHO_PHE_DUYET" {{ $memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'selected' : '' }}>Chờ phê duyệt</option>
+                                                            <option value="TAM_NGHI" {{ $memberStatus === \App\Enums\ThanhVienTrangThai::TAM_NGHI->value ? 'selected' : '' }}>Tạm nghỉ (Tạm khóa quyền)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <footer class="event-modal-footer">
+                                                    <button type="button" class="secondary-button" data-close-member-modal>Hủy bỏ</button>
+                                                    <button type="submit" class="primary-button">Lưu thay đổi</button>
+                                                </footer>
+                                            </form>
+                                        </section>
+                                    </dialog>
                                 @endif
-                                <button type="button" class="btn-member-action" data-open-member-modal="member-modal-{{ $membership->MaThanhVien }}" title="Cấp quyền quản lý hoặc đổi vai trò">
-                                    Cấp quyền
-                                </button>
-
-                                <dialog class="event-modal club-modal" id="member-modal-{{ $membership->MaThanhVien }}">
-                                    <section class="event-modal-card">
-                                        <header class="event-modal-header">
-                                            <span class="event-modal-icon" aria-hidden="true">🛡️</span>
-                                            <div>
-                                                <h2>Cấp quyền &amp; Phân vai trò</h2>
-                                                <p>{{ $member->HoTen }} · MSSV: {{ $member->MSSV }}</p>
-                                            </div>
-                                            <button type="button" class="event-modal-close" data-close-member-modal aria-label="Đóng">×</button>
-                                        </header>
-                                        <form action="{{ route('caulacbo.members.update', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" class="event-modal-form">
-                                            @csrf
-                                            @method('PATCH')
-                                            <div class="event-modal-body" style="display: grid; gap: 16px; padding: 20px;">
-                                                <div>
-                                                    <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px;">Chức vụ &amp; Quyền hạn quản lý <span style="color: #ef4444;">*</span></label>
-                                                    <select name="ChucVu" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px;">
-                                                        <optgroup label="⭐ Nhóm Có Quyền Quản Lý CLB (Xem, Tạo sự kiện, Tuyển thành viên)">
-                                                            <option value="Phó chủ nhiệm" {{ $membership->ChucVu === 'Phó chủ nhiệm' ? 'selected' : '' }}>Phó chủ nhiệm (Được quản lý)</option>
-                                                            <option value="Trưởng ban Kỹ thuật" {{ $membership->ChucVu === 'Trưởng ban Kỹ thuật' ? 'selected' : '' }}>Trưởng ban Kỹ thuật (Được quản lý)</option>
-                                                            <option value="Trưởng ban Truyền thông" {{ $membership->ChucVu === 'Trưởng ban Truyền thông' ? 'selected' : '' }}>Trưởng ban Truyền thông (Được quản lý)</option>
-                                                            <option value="Trưởng ban Sự kiện" {{ $membership->ChucVu === 'Trưởng ban Sự kiện' ? 'selected' : '' }}>Trưởng ban Sự kiện (Được quản lý)</option>
-                                                            <option value="Quản lý" {{ $membership->ChucVu === 'Quản lý' ? 'selected' : '' }}>Quản lý CLB (Được quản lý)</option>
-                                                            @if($isOwner ?? true)
-                                                                <option value="Chủ nhiệm" {{ in_array($membership->ChucVu, ['Chủ nhiệm', 'CHU_NHIEM']) ? 'selected' : '' }}>Chủ nhiệm (Chủ sở hữu CLB)</option>
-                                                            @endif
-                                                        </optgroup>
-                                                        <optgroup label="👤 Nhóm Thành Viên (Chỉ tham gia, không có quyền quản lý)">
-                                                            <option value="Thành viên" {{ in_array($membership->ChucVu, ['Thành viên', 'THANH_VIEN']) ? 'selected' : '' }}>Thành viên</option>
-                                                            <option value="Cộng tác viên" {{ in_array($membership->ChucVu, ['Cộng tác viên', 'CTV']) ? 'selected' : '' }}>Cộng tác viên</option>
-                                                        </optgroup>
-                                                    </select>
-                                                    <p style="margin: 6px 0 0; font-size: 11px; color: var(--text-faint); line-height: 1.4;">
-                                                        Gán vai trò trong nhóm <strong>Có Quyền Quản Lý</strong> sẽ cho phép thành viên này quản lý câu lạc bộ, đăng bài đợt tuyển và tạo sự kiện.
-                                                    </p>
-                                                </div>
-
-                                                <div>
-                                                    <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px;">Trạng thái hoạt động</label>
-                                                    <select name="TrangThai" style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px;">
-                                                        <option value="DANG_HOAT_DONG" {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'selected' : '' }}>Đang hoạt động (Kích hoạt quyền)</option>
-                                                        <option value="CHO_PHE_DUYET" {{ $memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'selected' : '' }}>Chờ phê duyệt</option>
-                                                        <option value="TAM_NGHI" {{ $memberStatus === \App\Enums\ThanhVienTrangThai::TAM_NGHI->value ? 'selected' : '' }}>Tạm nghỉ (Tạm khóa quyền)</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <footer class="event-modal-footer">
-                                                <button type="button" class="secondary-button" data-close-member-modal>Hủy bỏ</button>
-                                                <button type="submit" class="primary-button">Lưu thay đổi</button>
-                                            </footer>
-                                        </form>
-                                    </section>
-                                </dialog>
                             @else
                                 <span>—</span>
                             @endif

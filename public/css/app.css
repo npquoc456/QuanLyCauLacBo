@@ -424,10 +424,11 @@ h1 { margin: 0; color: var(--text); font: 900 clamp(21px, 2.4vw, 27px)/1.2 'Nuni
 .club-members-layout .event-overview { padding-top: 13px; }
 .club-members-panel { min-width: 0; padding: 12px; }
 .club-member-table { display: grid; min-width: 0; }
-.club-member-heading, .club-member-row { display: grid; grid-template-columns: minmax(140px, 1.2fr) minmax(130px, 1.1fr) minmax(70px, .6fr) minmax(95px, .8fr) minmax(95px, .8fr); align-items: center; gap: 10px; padding: 10px 8px; }
+.club-member-heading, .club-member-row { display: grid; grid-template-columns: minmax(140px, 1.2fr) minmax(120px, 1.1fr) minmax(70px, .6fr) minmax(95px, auto) minmax(130px, auto); align-items: center; gap: 10px; padding: 10px 8px; }
 .club-member-heading { min-height: 34px; border-bottom: 1px solid var(--line); color: var(--text-faint); font-size: 7px; font-weight: 800; text-transform: uppercase; }
 .club-member-row { min-height: 68px; border-bottom: 1px solid var(--line); }
 .club-member-row:last-child { border-bottom: 0; }
+.club-member-row > .checkin-badge { justify-self: start; width: fit-content; max-width: fit-content; white-space: nowrap; padding: 3px 8px; border-radius: 999px; font-size: 7.5px; }
 .club-member-identity { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .club-member-identity > img, .club-member-identity > span { display: grid; width: 31px; height: 31px; flex: 0 0 31px; place-items: center; overflow: hidden; border-radius: 50%; color: var(--blue); background: var(--blue-soft); object-fit: cover; font-size: 10px; font-weight: 900; }
 .club-member-identity > div { display: grid; min-width: 0; gap: 3px; }
@@ -437,11 +438,13 @@ h1 { margin: 0; color: var(--text); font: 900 clamp(21px, 2.4vw, 27px)/1.2 'Nuni
 .club-member-role .meta-badge { font-size: 6px; }
 .manager-role-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 4px; background: #e0e7ff; color: #3730a3; font-size: 8px; font-weight: 800; }
 .club-member-points strong { color: #14825e; font-size: 8px; font-weight: 900; }
-.club-member-actions { display: flex; align-items: center; gap: 6px; }
-.btn-member-action { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
+.club-member-actions { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+.btn-member-action { display: inline-flex; align-items: center; justify-content: center; gap: 3px; padding: 4px 8px; border-radius: 6px; border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; font-size: 8.5px; font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
 .btn-member-action:hover { background: #3b82f6; color: #fff; border-color: #3b82f6; }
-.btn-member-approve { border-color: #86efac; background: #f0fdf4; color: #15803d; }
+.btn-member-approve { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
 .btn-member-approve:hover { background: #16a34a; color: #fff; border-color: #16a34a; }
+.btn-member-reject { border-color: #fecaca; background: #fef2f2; color: #dc2626; }
+.btn-member-reject:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
 .club-members-pagination { flex-wrap: wrap; gap: 10px; }
 .club-members-pagination nav { margin-left: auto; }
 .club-members-pagination nav > div:first-child { display: none; }
@@ -869,6 +872,8 @@ html[data-theme='dark'] .btn-member-action { border-color: #2b3a67; background: 
 html[data-theme='dark'] .btn-member-action:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
 html[data-theme='dark'] .btn-member-approve { border-color: #14532d; background: #064e3b; color: #86efac; }
 html[data-theme='dark'] .btn-member-approve:hover { background: #15803d; color: #fff; border-color: #15803d; }
+html[data-theme='dark'] .btn-member-reject { border-color: #7f1d1d; background: #450a0a; color: #fca5a5; }
+html[data-theme='dark'] .btn-member-reject:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
 
 @media (max-width: 1100px) and (min-width: 761px) {
     .main-nav .nav-link > span:last-child { white-space: normal; }
