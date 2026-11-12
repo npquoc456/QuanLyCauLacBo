@@ -164,6 +164,40 @@ class DotTuyenFlowTest extends TestCase
             'MaNguoiXetDuyet' => $manager->MaNguoiDung,
             'GhiChu' => 'Hồ sơ phù hợp.',
         ]);
+
+        // Hồ sơ được duyệt sẽ được chuyển vào danh sách thành viên ở mục Chờ phê duyệt
+        $this->assertDatabaseHas('thanh_vien_c_l_b_s', [
+            'MaCLB' => $club->MaCLB,
+            'MaNguoiDung' => $applicant->MaNguoiDung,
+            'ChucVu' => 'Thành viên Ban Sự kiện',
+            'TrangThai' => ThanhVienTrangThai::CHO_PHE_DUYET->value,
+        ]);
+
+        $membership = ThanhVienCLB::query()
+            ->where('MaCLB', $club->MaCLB)
+            ->where('MaNguoiDung', $applicant->MaNguoiDung)
+            ->firstOrFail();
+
+        // Trang quản lý thành viên hiển thị ứng viên ở mục Chờ phê duyệt và có nút Duyệt chính thức
+        $this->actingAs($manager)
+            ->get(route('caulacbo.members', $club->MaCLB))
+            ->assertOk()
+            ->assertSee('Chờ phê duyệt')
+            ->assertSee('✓ Duyệt chính thức')
+            ->assertSee($applicant->HoTen);
+
+        // Sau khi phỏng vấn xong, ban quản lý duyệt chính thức thành viên
+        $this->actingAs($manager)
+            ->patch(route('caulacbo.members.update', [$club->MaCLB, $membership->MaThanhVien]), [
+                'ChucVu' => 'Thành viên Ban Sự kiện',
+                'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG->value,
+            ])
+            ->assertRedirect(route('caulacbo.members', $club->MaCLB));
+
+        $this->assertDatabaseHas('thanh_vien_c_l_b_s', [
+            'MaThanhVien' => $membership->MaThanhVien,
+            'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG->value,
+        ]);
     }
 
     public function test_draft_recruitment_is_not_visible_to_applicants_and_other_users_cannot_manage_club(): void

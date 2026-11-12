@@ -159,6 +159,7 @@ h1 { margin: 0; color: var(--text); font: 900 clamp(21px, 2.4vw, 27px)/1.2 'Nuni
 .checkin-badge { color: var(--text-soft); background: #e7eaf2; }
 .checkin-badge i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .checkin-open { color: #00633d; background: #bff5d9; }
+.checkin-pending { color: #b45309; background: #fef3c7; }
 .event-details { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 5px; color: var(--text-soft); font-size: 8px; }
 .event-capacity { color: var(--text); font-weight: 700; }
 .event-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; }
@@ -439,6 +440,8 @@ h1 { margin: 0; color: var(--text); font: 900 clamp(21px, 2.4vw, 27px)/1.2 'Nuni
 .club-member-actions { display: flex; align-items: center; gap: 6px; }
 .btn-member-action { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
 .btn-member-action:hover { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.btn-member-approve { border-color: #86efac; background: #f0fdf4; color: #15803d; }
+.btn-member-approve:hover { background: #16a34a; color: #fff; border-color: #16a34a; }
 .club-members-pagination { flex-wrap: wrap; gap: 10px; }
 .club-members-pagination nav { margin-left: auto; }
 .club-members-pagination nav > div:first-child { display: none; }
@@ -861,6 +864,11 @@ html[data-theme='dark'] .meta-badge { color: #b7caff; background: #29334b; }
 html[data-theme='dark'] .badge-internal { color: #c6c4ff; background: #302f4b; }
 html[data-theme='dark'] .checkin-badge { color: #c3c8d8; background: #303443; }
 html[data-theme='dark'] .checkin-open { color: #9be4c2; background: #214437; }
+html[data-theme='dark'] .checkin-pending { color: #fde68a; background: #78350f; }
+html[data-theme='dark'] .btn-member-action { border-color: #2b3a67; background: #1e293b; color: #93c5fd; }
+html[data-theme='dark'] .btn-member-action:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+html[data-theme='dark'] .btn-member-approve { border-color: #14532d; background: #064e3b; color: #86efac; }
+html[data-theme='dark'] .btn-member-approve:hover { background: #15803d; color: #fff; border-color: #15803d; }
 
 @media (max-width: 1100px) and (min-width: 761px) {
     .main-nav .nav-link > span:last-child { white-space: normal; }

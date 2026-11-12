@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Enums\CauLacBoTrangThai;
+use App\Enums\DonUngTrangThai;
 use App\Enums\NguoiDungVaiTro;
 use App\Enums\ThanhVienTrangThai;
 use App\Models\CauLacBo;
+use App\Models\DonUngTuyen;
 use App\Models\NguoiDung;
 use App\Models\SuKien;
 use App\Models\ThanhVienCLB;
@@ -137,9 +139,41 @@ class CauLacBoService
      *     statusFilter: string
      * }
      */
+    public function syncPendingMembersFromApprovedApplications(int $clubId): void
+    {
+        $approvedApplications = DonUngTuyen::query()
+            ->with(['viTri'])
+            ->where('TrangThai', DonUngTrangThai::DA_DUYET->value)
+            ->whereHas('viTri.dotTuyen', fn ($builder) => $builder->where('MaCLB', $clubId))
+            ->get();
+
+        foreach ($approvedApplications as $app) {
+            if (! $app->MaNguoiUngTuyen) {
+                continue;
+            }
+
+            $membership = ThanhVienCLB::query()
+                ->where('MaCLB', $clubId)
+                ->where('MaNguoiDung', $app->MaNguoiUngTuyen)
+                ->first();
+
+            if (! $membership) {
+                ThanhVienCLB::query()->create([
+                    'MaCLB' => $clubId,
+                    'MaNguoiDung' => $app->MaNguoiUngTuyen,
+                    'ChucVu' => $app->viTri?->TenViTri ?: 'Thành viên',
+                    'NgayThamGia' => $app->NgayCapNhat ?? $app->NgayNopDon ?? now(),
+                    'TrangThai' => ThanhVienTrangThai::CHO_PHE_DUYET,
+                ]);
+            }
+        }
+    }
+
     public function getClubMembersData(string $clubId, ?string $search, ?string $role, ?string $status): array
     {
         $club = CauLacBo::query()->findOrFail($clubId);
+        $this->syncPendingMembersFromApprovedApplications($club->MaCLB);
+
         $baseQuery = ThanhVienCLB::query()
             ->where('MaCLB', $club->MaCLB)
             ->whereNotNull('MaNguoiDung')
@@ -196,7 +230,7 @@ class CauLacBoService
         }
 
         $members = $query
-            ->orderByRaw('CASE WHEN TrangThai = ? THEN 1 ELSE 0 END', [ThanhVienTrangThai::CHO_PHE_DUYET->value])
+            ->orderByRaw('CASE WHEN TrangThai = ? THEN 0 ELSE 1 END', [ThanhVienTrangThai::CHO_PHE_DUYET->value])
             ->orderBy('MaThanhVien')
             ->paginate(10)
             ->withQueryString();

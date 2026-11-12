@@ -11,6 +11,7 @@ use App\Models\CauLacBo;
 use App\Models\DonUngTuyen;
 use App\Models\DotTuyenThanhVien;
 use App\Models\NguoiDung;
+use App\Models\ThanhVienCLB;
 use App\Notifications\RecruitmentApplicationReceived;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -562,15 +563,61 @@ class DotTuyenService
     ): DonUngTuyen {
         $this->managedClub($clubId, $user);
         $application = DonUngTuyen::query()
+            ->with(['viTri'])
             ->whereKey($applicationId)
             ->whereHas('viTri.dotTuyen', fn (Builder $builder) => $builder->where('MaCLB', $clubId))
             ->firstOrFail();
+
         $application->forceFill([
             'TrangThai' => $status,
             'MaNguoiXetDuyet' => $user->MaNguoiDung,
             'GhiChu' => $note,
             'NgayCapNhat' => now(),
         ])->save();
+
+        if ($status === DonUngTrangThai::DA_DUYET) {
+            if ($application->MaNguoiUngTuyen) {
+                $role = $application->viTri?->TenViTri ?: 'Thành viên';
+                $membership = ThanhVienCLB::query()
+                    ->where('MaCLB', $clubId)
+                    ->where('MaNguoiDung', $application->MaNguoiUngTuyen)
+                    ->first();
+
+                if (! $membership) {
+                    ThanhVienCLB::query()->create([
+                        'MaCLB' => $clubId,
+                        'MaNguoiDung' => $application->MaNguoiUngTuyen,
+                        'ChucVu' => $role,
+                        'NgayThamGia' => now(),
+                        'TrangThai' => ThanhVienTrangThai::CHO_PHE_DUYET,
+                    ]);
+                } elseif ($membership->TrangThai === ThanhVienTrangThai::DA_ROI_CLB || $membership->TrangThai === ThanhVienTrangThai::CHO_PHE_DUYET) {
+                    $membership->forceFill([
+                        'ChucVu' => $role,
+                        'NgayThamGia' => now(),
+                        'TrangThai' => ThanhVienTrangThai::CHO_PHE_DUYET,
+                    ])->save();
+                }
+            }
+        } else {
+            // Khi hủy hoặc từ chối hồ sơ, nếu thành viên vẫn đang ở trạng thái Chờ phê duyệt và không còn hồ sơ nào khác được duyệt thì thu hồi
+            if ($application->MaNguoiUngTuyen) {
+                $hasOtherApproved = DonUngTuyen::query()
+                    ->where('MaNguoiUngTuyen', $application->MaNguoiUngTuyen)
+                    ->where('MaDon', '!=', $application->MaDon)
+                    ->where('TrangThai', DonUngTrangThai::DA_DUYET->value)
+                    ->whereHas('viTri.dotTuyen', fn (Builder $builder) => $builder->where('MaCLB', $clubId))
+                    ->exists();
+
+                if (! $hasOtherApproved) {
+                    ThanhVienCLB::query()
+                        ->where('MaCLB', $clubId)
+                        ->where('MaNguoiDung', $application->MaNguoiUngTuyen)
+                        ->where('TrangThai', ThanhVienTrangThai::CHO_PHE_DUYET->value)
+                        ->delete();
+                }
+            }
+        }
 
         return $application;
     }

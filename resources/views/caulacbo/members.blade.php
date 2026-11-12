@@ -158,11 +158,22 @@
                             <strong>—</strong>
                             <small>Chưa có dữ liệu</small>
                         </div>
-                        <span class="checkin-badge {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'checkin-open' : '' }}">
+                        <span class="checkin-badge {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'checkin-open' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'checkin-pending' : '') }}">
                             <i></i>{{ $formatMemberStatus($memberStatus) }}
                         </span>
                         <div class="club-member-actions">
                             @if ($canManage ?? true)
+                                @if ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value)
+                                    <form action="{{ route('caulacbo.members.update', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="ChucVu" value="{{ $membership->ChucVu ?: 'Thành viên' }}">
+                                        <input type="hidden" name="TrangThai" value="{{ \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value }}">
+                                        <button type="submit" class="btn-member-action btn-member-approve" title="Duyệt chính thức thành viên này sau khi hoàn tất phỏng vấn">
+                                            ✓ Duyệt chính thức
+                                        </button>
+                                    </form>
+                                @endif
                                 <button type="button" class="btn-member-action" data-open-member-modal="member-modal-{{ $membership->MaThanhVien }}" title="Cấp quyền quản lý hoặc đổi vai trò">
                                     Cấp quyền
                                 </button>
