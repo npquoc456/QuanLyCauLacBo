@@ -140,10 +140,5 @@
         </section>
         <div class="auth-support"><span>Cần hỗ trợ kỹ thuật? <a href="mailto:support@uniclub.edu.vn">Hotline hỗ trợ sinh viên</a></span><span>Phiên bản v2.4.2-stable <i>•</i> Server: VNU Data Center HCM</span></div>
     </main>
-
-    <footer class="auth-footer">
-        <div><strong>♧ UniClub Platform</strong><span>© 2025 UniClub. Cộng đồng và đăng ký sự kiện phong trào Sinh viên </span></div>
-        <nav><a href="{{ route('home') }}">Trung tâm trợ giúp</a><a href="{{ route('home') }}">Quy chế sinh viên</a><a href="{{ route('home') }}">Chính sách bảo mật</a><a href="mailto:support@uniclub.edu.vn">Liên hệ Ban Quản lý</a></nav>
-    </footer>
 </body>
 </html>
