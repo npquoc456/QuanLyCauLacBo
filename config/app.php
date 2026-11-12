@@ -97,7 +97,7 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
-    'key' => 'base64:Di9yhPK5wVqTTgGP0Uco1z/Ef9ZMsFRlDi6T1PMgtCo=',
+    'key' => '12345678901234567890123456789012',
 
     'previous_keys' => [
         ...array_filter(
