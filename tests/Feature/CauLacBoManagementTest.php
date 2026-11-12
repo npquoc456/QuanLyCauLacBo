@@ -665,6 +665,90 @@ class CauLacBoManagementTest extends TestCase
         $this->assertSame('Sinh hoạt định kỳ', \App\Enums\SuKienPhanLoaiNoiBo::SINH_HOAT_DINH_KY->label());
         $this->assertSame('Đang mở đăng ký', \App\Enums\SuKienTrangThai::DANG_MO_DANG_KY->label());
         $this->assertSame('Đang hoạt động', \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->label());
+        $this->assertSame('Chờ duyệt rời', \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->label());
         $this->assertSame('Đã điểm danh', \App\Enums\TrangThaiDangKy::DA_CHECK_IN->label());
+    }
+
+    public function test_owner_can_delete_member_and_member_can_request_leave_and_be_approved(): void
+    {
+        $owner = $this->createUser('owner_del', 'owner_del@example.test', '20269901');
+        $member = $this->createUser('member_del', 'member_del@example.test', '20269902');
+        $manager = $this->createUser('manager_sub', 'manager_sub@example.test', '20269903');
+
+        $club = CauLacBo::create([
+            'TenCLB' => 'CLB Khởi Nghiệp',
+            'TrangThai' => 'DANG_HOAT_DONG',
+        ]);
+
+        $ownerMembership = ThanhVienCLB::create([
+            'MaNguoiDung' => $owner->MaNguoiDung,
+            'MaCLB' => $club->MaCLB,
+            'ChucVu' => 'Chủ nhiệm',
+            'NgayThamGia' => now(),
+            'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG,
+        ]);
+
+        $managerMembership = ThanhVienCLB::create([
+            'MaNguoiDung' => $manager->MaNguoiDung,
+            'MaCLB' => $club->MaCLB,
+            'ChucVu' => 'Phó chủ nhiệm',
+            'NgayThamGia' => now(),
+            'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG,
+        ]);
+
+        $memberMembership = ThanhVienCLB::create([
+            'MaNguoiDung' => $member->MaNguoiDung,
+            'MaCLB' => $club->MaCLB,
+            'ChucVu' => 'Thành viên',
+            'NgayThamGia' => now(),
+            'TrangThai' => ThanhVienTrangThai::DANG_HOAT_DONG,
+        ]);
+
+        // 1. Owner views member list: sees "Chi tiết" for all, "Xóa" for other members, and "Rời CLB" for themselves
+        $this->actingAs($owner)
+            ->get(route('caulacbo.members', $club->MaCLB))
+            ->assertOk()
+            ->assertSee('Chi tiết')
+            ->assertSee('Xóa')
+            ->assertSee('Rời CLB');
+
+        // 2. Member (or Phó chủ nhiệm) requests to leave club -> status becomes CHO_DUYET_ROI
+        $this->actingAs($manager)
+            ->post(route('caulacbo.members.requestLeave', [$club->MaCLB, $managerMembership->MaThanhVien]))
+            ->assertRedirect(route('caulacbo.members', $club->MaCLB))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('thanh_vien_c_l_b_s', [
+            'MaThanhVien' => $managerMembership->MaThanhVien,
+            'TrangThai' => ThanhVienTrangThai::CHO_DUYET_ROI->value,
+        ]);
+
+        // 3. Owner sees "Chờ duyệt rời" and buttons "Duyệt rời" / "Giữ lại"
+        $this->actingAs($owner)
+            ->get(route('caulacbo.members', $club->MaCLB))
+            ->assertOk()
+            ->assertSee('Chờ duyệt rời')
+            ->assertSee('Duyệt rời')
+            ->assertSee('Giữ lại');
+
+        // 4. Owner approves leave -> manager is removed from club
+        $this->actingAs($owner)
+            ->post(route('caulacbo.members.approveLeave', [$club->MaCLB, $managerMembership->MaThanhVien]))
+            ->assertRedirect(route('caulacbo.members', $club->MaCLB))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('thanh_vien_c_l_b_s', [
+            'MaThanhVien' => $managerMembership->MaThanhVien,
+        ]);
+
+        // 5. Owner deletes regular member directly
+        $this->actingAs($owner)
+            ->delete(route('caulacbo.members.destroy', [$club->MaCLB, $memberMembership->MaThanhVien]))
+            ->assertRedirect(route('caulacbo.members', $club->MaCLB))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('thanh_vien_c_l_b_s', [
+            'MaThanhVien' => $memberMembership->MaThanhVien,
+        ]);
     }
 }

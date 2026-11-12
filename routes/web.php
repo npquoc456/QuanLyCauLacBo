@@ -38,6 +38,26 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('thanhVien')
         ->name('caulacbo.members.update');
 
+    Route::delete('caulacbo/{caulacbo}/thanh-vien/{thanhVien}', [CauLacBoController::class, 'destroyMember'])
+        ->whereNumber('caulacbo')
+        ->whereNumber('thanhVien')
+        ->name('caulacbo.members.destroy');
+
+    Route::post('caulacbo/{caulacbo}/thanh-vien/{thanhVien}/roi', [CauLacBoController::class, 'requestLeave'])
+        ->whereNumber('caulacbo')
+        ->whereNumber('thanhVien')
+        ->name('caulacbo.members.requestLeave');
+
+    Route::post('caulacbo/{caulacbo}/thanh-vien/{thanhVien}/duyet-roi', [CauLacBoController::class, 'approveLeave'])
+        ->whereNumber('caulacbo')
+        ->whereNumber('thanhVien')
+        ->name('caulacbo.members.approveLeave');
+
+    Route::post('caulacbo/{caulacbo}/thanh-vien/{thanhVien}/tu-choi-roi', [CauLacBoController::class, 'rejectLeave'])
+        ->whereNumber('caulacbo')
+        ->whereNumber('thanhVien')
+        ->name('caulacbo.members.rejectLeave');
+
     Route::get('caulacbo/{caulacbo}/dot-tuyen', [DotTuyenController::class, 'index'])
         ->whereNumber('caulacbo')
         ->name('caulacbo.recruitments.index');

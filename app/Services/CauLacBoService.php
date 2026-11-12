@@ -193,6 +193,10 @@ class CauLacBoService
             ->where('TrangThai', ThanhVienTrangThai::CHO_PHE_DUYET->value)
             ->distinct()
             ->count('MaNguoiDung');
+        $pendingLeaveMembers = (clone $baseQuery)
+            ->where('TrangThai', ThanhVienTrangThai::CHO_DUYET_ROI->value)
+            ->distinct()
+            ->count('MaNguoiDung');
         $roles = (clone $baseQuery)
             ->selectRaw('ChucVu, COUNT(DISTINCT MaNguoiDung) AS members_count')
             ->groupBy('ChucVu')
@@ -230,7 +234,10 @@ class CauLacBoService
         }
 
         $members = $query
-            ->orderByRaw('CASE WHEN TrangThai = ? THEN 0 ELSE 1 END', [ThanhVienTrangThai::CHO_PHE_DUYET->value])
+            ->orderByRaw('CASE WHEN TrangThai = ? THEN 0 WHEN TrangThai = ? THEN 1 ELSE 2 END', [
+                ThanhVienTrangThai::CHO_PHE_DUYET->value,
+                ThanhVienTrangThai::CHO_DUYET_ROI->value,
+            ])
             ->orderBy('MaThanhVien')
             ->paginate(10)
             ->withQueryString();
@@ -242,6 +249,7 @@ class CauLacBoService
             'activeMembers' => $activeMembers,
             'pausedMembers' => $pausedMembers,
             'pendingMembers' => $pendingMembers,
+            'pendingLeaveMembers' => $pendingLeaveMembers,
             'roles' => $roles,
             'search' => $search,
             'roleFilter' => $roleFilter,
@@ -368,6 +376,101 @@ class CauLacBoService
             }
         }
 
+        $membership->save();
+
+        return $membership;
+    }
+
+    public function destroyMember(int $clubId, int $memberId, NguoiDung $user): void
+    {
+        if (! $this->isClubOwner($user, $clubId)) {
+            abort(403, 'Chỉ có chủ nhiệm câu lạc bộ mới có quyền xóa thành viên.');
+        }
+
+        $membership = ThanhVienCLB::query()
+            ->where('MaCLB', $clubId)
+            ->where('MaThanhVien', $memberId)
+            ->firstOrFail();
+
+        if ($membership->MaNguoiDung === $user->MaNguoiDung) {
+            abort(400, 'Chủ nhiệm không thể tự xóa chính mình khỏi câu lạc bộ.');
+        }
+
+        if ($membership->MaNguoiDung) {
+            DonUngTuyen::query()
+                ->where('MaNguoiUngTuyen', $membership->MaNguoiDung)
+                ->whereHas('viTri.dotTuyen', fn ($builder) => $builder->where('MaCLB', $clubId))
+                ->where('TrangThai', DonUngTrangThai::DA_DUYET->value)
+                ->update([
+                    'TrangThai' => DonUngTrangThai::TU_CHOI->value,
+                    'NgayCapNhat' => now(),
+                ]);
+        }
+
+        $membership->delete();
+    }
+
+    public function requestLeaveClub(int $clubId, int $memberId, NguoiDung $user): ThanhVienCLB
+    {
+        $membership = ThanhVienCLB::query()
+            ->where('MaCLB', $clubId)
+            ->where('MaThanhVien', $memberId)
+            ->firstOrFail();
+
+        if ($membership->MaNguoiDung !== $user->MaNguoiDung) {
+            abort(403, 'Bạn chỉ có thể gửi yêu cầu rời cho tài khoản của chính mình.');
+        }
+
+        if ($this->isClubOwner($user, $clubId)) {
+            abort(400, 'Bạn là Chủ nhiệm câu lạc bộ. Để rời câu lạc bộ, vui lòng chuyển giao quyền Chủ nhiệm cho thành viên khác trước.');
+        }
+
+        $membership->TrangThai = ThanhVienTrangThai::CHO_DUYET_ROI;
+        $membership->save();
+
+        return $membership;
+    }
+
+    public function approveLeaveClub(int $clubId, int $memberId, NguoiDung $user): void
+    {
+        if (! $this->canManageClub($user, $clubId)) {
+            abort(403, 'Bạn không có quyền quản lý câu lạc bộ này.');
+        }
+
+        $membership = ThanhVienCLB::query()
+            ->where('MaCLB', $clubId)
+            ->where('MaThanhVien', $memberId)
+            ->firstOrFail();
+
+        if ($membership->MaNguoiDung) {
+            DonUngTuyen::query()
+                ->where('MaNguoiUngTuyen', $membership->MaNguoiDung)
+                ->whereHas('viTri.dotTuyen', fn ($builder) => $builder->where('MaCLB', $clubId))
+                ->where('TrangThai', DonUngTrangThai::DA_DUYET->value)
+                ->update([
+                    'TrangThai' => DonUngTrangThai::TU_CHOI->value,
+                    'NgayCapNhat' => now(),
+                ]);
+        }
+
+        $membership->delete();
+    }
+
+    public function rejectLeaveClub(int $clubId, int $memberId, NguoiDung $user): ThanhVienCLB
+    {
+        $membership = ThanhVienCLB::query()
+            ->where('MaCLB', $clubId)
+            ->where('MaThanhVien', $memberId)
+            ->firstOrFail();
+
+        $isSelf = $membership->MaNguoiDung === $user->MaNguoiDung;
+        $canManage = $this->canManageClub($user, $clubId);
+
+        if (! $isSelf && ! $canManage) {
+            abort(403, 'Bạn không có quyền hủy hoặc từ chối yêu cầu rời.');
+        }
+
+        $membership->TrangThai = ThanhVienTrangThai::DANG_HOAT_DONG;
         $membership->save();
 
         return $membership;

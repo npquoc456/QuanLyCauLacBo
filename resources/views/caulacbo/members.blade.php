@@ -34,6 +34,7 @@
                 'DANG_HOAT_DONG', 'DANG HOAT DONG' => 'Đang hoạt động',
                 'TAM_NGHI', 'TAM NGHI' => 'Tạm nghỉ',
                 'CHO_PHE_DUYET', 'CHO PHE DUYET' => 'Chờ phê duyệt',
+                'CHO_DUYET_ROI', 'CHO DUYET ROI' => 'Chờ duyệt rời',
                 'DA_ROI_CLB', 'DA ROI CLB' => 'Đã rời CLB',
                 default => str_replace('_', ' ', (string) $status),
             };
@@ -83,6 +84,12 @@
                    href="{{ route('caulacbo.members', ['caulacbo' => $club->MaCLB, 'status' => \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value]) }}">
                     <span>◷</span><strong>Chờ phê duyệt</strong><b>{{ $pendingMembers }}</b>
                 </a>
+                @if (($pendingLeaveMembers ?? 0) > 0)
+                    <a class="overview-link {{ $statusFilter === \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value ? 'is-active' : '' }}"
+                       href="{{ route('caulacbo.members', ['caulacbo' => $club->MaCLB, 'status' => \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value]) }}">
+                        <span>⇥</span><strong>Chờ duyệt rời</strong><b>{{ $pendingLeaveMembers }}</b>
+                    </a>
+                @endif
             </nav>
         </aside>
 
@@ -132,6 +139,7 @@
                         $member = $membership->nguoiDung;
                         $memberStatus = $membership->TrangThai?->value ?? 'CHUA_CAP_NHAT';
                         $hasManagementRight = app(\App\Services\CauLacBoService::class)->isManagementRole($membership->ChucVu);
+                        $isSelf = (int) $member->MaNguoiDung === (int) (auth()->id() ?? 0);
                     @endphp
                     <article class="club-member-row">
                         <div class="club-member-identity">
@@ -158,7 +166,7 @@
                             <strong>—</strong>
                             <small>Chưa có dữ liệu</small>
                         </div>
-                        <span class="checkin-badge {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'checkin-open' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'checkin-pending' : '') }}">
+                        <span class="checkin-badge {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'checkin-open' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'checkin-pending' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value ? 'checkin-leave' : '')) }}">
                             <i></i>{{ $formatMemberStatus($memberStatus) }}
                         </span>
                         <div class="club-member-actions">
@@ -180,6 +188,19 @@
                                         <input type="hidden" name="TrangThai" value="{{ \App\Enums\ThanhVienTrangThai::DA_ROI_CLB->value }}">
                                         <button type="submit" class="btn-member-action btn-member-reject" title="Từ chối ứng viên này">
                                             Từ chối
+                                        </button>
+                                    </form>
+                                @elseif ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value)
+                                    <form action="{{ route('caulacbo.members.approveLeave', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn đồng ý cho thành viên {{ $member->HoTen }} rời câu lạc bộ?');">
+                                        @csrf
+                                        <button type="submit" class="btn-member-action btn-member-approve" title="Phê duyệt cho thành viên rời CLB">
+                                            Duyệt rời
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('caulacbo.members.rejectLeave', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn từ chối yêu cầu rời và giữ lại thành viên?');">
+                                        @csrf
+                                        <button type="submit" class="btn-member-action btn-member-detail" title="Từ chối yêu cầu rời, giữ lại thành viên">
+                                            Giữ lại
                                         </button>
                                     </form>
                                 @else
@@ -241,8 +262,149 @@
                                         </section>
                                     </dialog>
                                 @endif
+
+                                <button type="button" class="btn-member-action btn-member-detail" data-open-member-modal="member-detail-modal-{{ $membership->MaThanhVien }}" title="Xem chi tiết thông tin thành viên">
+                                    Chi tiết
+                                </button>
+
+                                @if ($isSelf)
+                                    @if ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value)
+                                        <form action="{{ route('caulacbo.members.rejectLeave', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;">
+                                            @csrf
+                                            <button type="submit" class="btn-member-action btn-member-detail" title="Hủy yêu cầu rời câu lạc bộ">
+                                                Hủy yêu cầu
+                                            </button>
+                                        </form>
+                                    @elseif ($isOwner ?? false)
+                                        <button type="button" class="btn-member-action btn-member-leave" onclick="alert('Bạn đang là Chủ nhiệm của câu lạc bộ. Để rời câu lạc bộ, bạn cần chuyển giao quyền Chủ nhiệm cho thành viên khác trước.');" title="Chủ nhiệm không thể rời CLB khi chưa chuyển nhượng quyền">
+                                            Rời CLB
+                                        </button>
+                                    @else
+                                        <form action="{{ route('caulacbo.members.requestLeave', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn muốn gửi yêu cầu rời câu lạc bộ? Quyết định sẽ chờ Chủ quản phê duyệt.');">
+                                            @csrf
+                                            <button type="submit" class="btn-member-action btn-member-leave" title="Gửi yêu cầu rời câu lạc bộ">
+                                                Rời CLB
+                                            </button>
+                                        </form>
+                                    @endif
+                                @elseif ($isOwner ?? false)
+                                    <form action="{{ route('caulacbo.members.destroy', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thành viên {{ $member->HoTen }} khỏi câu lạc bộ không?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-member-action btn-member-delete" title="Xóa thành viên khỏi câu lạc bộ">
+                                            Xóa
+                                        </button>
+                                    </form>
+                                @endif
+
+                                <dialog class="event-modal club-modal" id="member-detail-modal-{{ $membership->MaThanhVien }}">
+                                    <section class="event-modal-card">
+                                        <header class="event-modal-header">
+                                            <span class="event-modal-icon" aria-hidden="true">👤</span>
+                                            <div>
+                                                <h2>Thông tin chi tiết thành viên</h2>
+                                                <p>{{ $member->HoTen }} · MSSV: {{ $member->MSSV ?: 'Chưa cập nhật' }}</p>
+                                            </div>
+                                            <button type="button" class="event-modal-close" data-close-member-modal aria-label="Đóng">×</button>
+                                        </header>
+                                        <div class="event-modal-body" style="padding: 20px; display: grid; gap: 16px;">
+                                            <div style="display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line);">
+                                                @if ($member->URLAnhDaiDien)
+                                                    <img src="{{ $member->URLAnhDaiDien }}" alt="" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='grid';">
+                                                    <div style="display: none; width: 50px; height: 50px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); place-items: center; font-weight: 800; font-size: 18px;">
+                                                        {{ mb_strtoupper(mb_substr($member->HoTen, 0, 1)) }}
+                                                    </div>
+                                                @else
+                                                    <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); display: grid; place-items: center; font-weight: 800; font-size: 18px;">
+                                                        {{ mb_strtoupper(mb_substr($member->HoTen, 0, 1)) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--text);">{{ $member->HoTen }}</h3>
+                                                    <p style="margin: 2px 0 0; font-size: 12px; color: var(--text-soft);">{{ $formatRole($membership->ChucVu) }} · <span class="checkin-badge {{ $memberStatus === \App\Enums\ThanhVienTrangThai::DANG_HOAT_DONG->value ? 'checkin-open' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_PHE_DUYET->value ? 'checkin-pending' : ($memberStatus === \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value ? 'checkin-leave' : '')) }}"><i></i>{{ $formatMemberStatus($memberStatus) }}</span></p>
+                                                </div>
+                                            </div>
+
+                                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; font-size: 12px;">
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Mã số sinh viên</strong><span style="font-weight: 700;">{{ $member->MSSV ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Tên tài khoản</strong><span style="font-weight: 700;">{{ $member->TenTaiKhoan }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Email</strong><span style="font-weight: 700;">{{ $member->Email ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Số điện thoại</strong><span style="font-weight: 700;">{{ $member->SDT ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Ngày sinh</strong><span>{{ $member->NgaySinh?->format('d/m/Y') ?? 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Ngày tham gia CLB</strong><span>{{ $membership->NgayThamGia?->format('d/m/Y') ?? 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Khoa</strong><span>{{ $member->Khoa ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Ngành / Khóa</strong><span>{{ $member->Nganh ?: 'Chưa cập nhật' }} {{ $member->KhoaHoc ? '('.$member->KhoaHoc.')' : '' }}</span></div>
+                                            </div>
+
+                                            @php
+                                                $userApp = \App\Models\DonUngTuyen::query()
+                                                    ->where('MaNguoiUngTuyen', $member->MaNguoiDung)
+                                                    ->whereHas('viTri.dotTuyen', fn ($q) => $q->where('MaCLB', $club->MaCLB))
+                                                    ->with('viTri.dotTuyen')
+                                                    ->latest('MaDon')
+                                                    ->first();
+                                            @endphp
+                                            @if ($userApp)
+                                                <div style="margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 12px;">
+                                                    <strong style="display: block; font-size: 12px; margin-bottom: 6px; color: var(--text);">Thông tin ứng tuyển gần nhất</strong>
+                                                    <p style="margin: 0 0 4px; color: var(--text-soft);">Đợt tuyển: <strong>{{ $userApp->viTri?->dotTuyen?->TenDotTuyen }}</strong> — Vị trí: <strong>{{ $userApp->viTri?->TenViTri }}</strong></p>
+                                                    @if ($userApp->NoiDung)
+                                                        <p style="margin: 4px 0; padding: 8px 10px; background: var(--surface-soft); border-radius: 6px; color: var(--text); font-style: italic;">"{{ $userApp->NoiDung }}"</p>
+                                                    @endif
+                                                    @if ($userApp->URLHoSo)
+                                                        <a href="{{ route('caulacbo.recruitments.resume', [$club->MaCLB, $userApp->MaDon]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--blue); font-weight: 700; text-decoration: none;">
+                                                            ▣ Xem / Tải file CV đính kèm
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <footer class="event-modal-footer">
+                                            <button type="button" class="secondary-button" data-close-member-modal>Đóng</button>
+                                        </footer>
+                                    </section>
+                                </dialog>
                             @else
-                                <span>—</span>
+                                <button type="button" class="btn-member-action btn-member-detail" data-open-member-modal="member-detail-modal-{{ $membership->MaThanhVien }}" title="Xem chi tiết thông tin thành viên">
+                                    Chi tiết
+                                </button>
+                                @if ($isSelf && $memberStatus !== \App\Enums\ThanhVienTrangThai::CHO_DUYET_ROI->value)
+                                    <form action="{{ route('caulacbo.members.requestLeave', ['caulacbo' => $club->MaCLB, 'thanhVien' => $membership->MaThanhVien]) }}" method="POST" style="margin: 0; display: inline-flex;" onsubmit="return confirm('Bạn có chắc chắn muốn gửi yêu cầu rời câu lạc bộ? Quyết định sẽ chờ Chủ quản phê duyệt.');">
+                                        @csrf
+                                        <button type="submit" class="btn-member-action btn-member-leave" title="Gửi yêu cầu rời câu lạc bộ">
+                                            Rời CLB
+                                        </button>
+                                    </form>
+                                @endif
+                                <dialog class="event-modal club-modal" id="member-detail-modal-{{ $membership->MaThanhVien }}">
+                                    <section class="event-modal-card">
+                                        <header class="event-modal-header">
+                                            <span class="event-modal-icon" aria-hidden="true">👤</span>
+                                            <div>
+                                                <h2>Thông tin chi tiết thành viên</h2>
+                                                <p>{{ $member->HoTen }} · MSSV: {{ $member->MSSV ?: 'Chưa cập nhật' }}</p>
+                                            </div>
+                                            <button type="button" class="event-modal-close" data-close-member-modal aria-label="Đóng">×</button>
+                                        </header>
+                                        <div class="event-modal-body" style="padding: 20px; display: grid; gap: 16px;">
+                                            <div style="display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line);">
+                                                <div>
+                                                    <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--text);">{{ $member->HoTen }}</h3>
+                                                    <p style="margin: 2px 0 0; font-size: 12px; color: var(--text-soft);">{{ $formatRole($membership->ChucVu) }} · {{ $formatMemberStatus($memberStatus) }}</p>
+                                                </div>
+                                            </div>
+                                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; font-size: 12px;">
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Mã số sinh viên</strong><span style="font-weight: 700;">{{ $member->MSSV ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Email</strong><span style="font-weight: 700;">{{ $member->Email ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Số điện thoại</strong><span style="font-weight: 700;">{{ $member->SDT ?: 'Chưa cập nhật' }}</span></div>
+                                                <div><strong style="color: var(--text-faint); display: block; font-size: 11px;">Ngày tham gia CLB</strong><span>{{ $membership->NgayThamGia?->format('d/m/Y') ?? 'Chưa cập nhật' }}</span></div>
+                                            </div>
+                                        </div>
+                                        <footer class="event-modal-footer">
+                                            <button type="button" class="secondary-button" data-close-member-modal>Đóng</button>
+                                        </footer>
+                                    </section>
+                                </dialog>
                             @endif
                         </div>
                     </article>

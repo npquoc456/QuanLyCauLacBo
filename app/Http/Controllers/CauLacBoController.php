@@ -121,4 +121,64 @@ class CauLacBoController extends Controller
             ->route('caulacbo.members', $caulacbo)
             ->with('success', $message);
     }
+
+    public function destroyMember(Request $request, string $caulacbo, string $thanhVien): RedirectResponse
+    {
+        $user = $request->user() instanceof NguoiDung ? $request->user() : null;
+        if ($user === null) {
+            abort(401);
+        }
+
+        $this->cauLacBoService->destroyMember((int) $caulacbo, (int) $thanhVien, $user);
+
+        return redirect()
+            ->route('caulacbo.members', $caulacbo)
+            ->with('success', 'Đã xóa thành viên khỏi câu lạc bộ thành công.');
+    }
+
+    public function requestLeave(Request $request, string $caulacbo, string $thanhVien): RedirectResponse
+    {
+        $user = $request->user() instanceof NguoiDung ? $request->user() : null;
+        if ($user === null) {
+            abort(401);
+        }
+
+        $this->cauLacBoService->requestLeaveClub((int) $caulacbo, (int) $thanhVien, $user);
+
+        return redirect()
+            ->route('caulacbo.members', $caulacbo)
+            ->with('success', 'Đã gửi yêu cầu rời câu lạc bộ. Vui lòng chờ Chủ quản phê duyệt.');
+    }
+
+    public function approveLeave(Request $request, string $caulacbo, string $thanhVien): RedirectResponse
+    {
+        $user = $request->user() instanceof NguoiDung ? $request->user() : null;
+        if ($user === null) {
+            abort(401);
+        }
+
+        $this->cauLacBoService->approveLeaveClub((int) $caulacbo, (int) $thanhVien, $user);
+
+        return redirect()
+            ->route('caulacbo.members', $caulacbo)
+            ->with('success', 'Đã phê duyệt cho thành viên rời câu lạc bộ.');
+    }
+
+    public function rejectLeave(Request $request, string $caulacbo, string $thanhVien): RedirectResponse
+    {
+        $user = $request->user() instanceof NguoiDung ? $request->user() : null;
+        if ($user === null) {
+            abort(401);
+        }
+
+        $membership = $this->cauLacBoService->rejectLeaveClub((int) $caulacbo, (int) $thanhVien, $user);
+
+        $msg = $membership->MaNguoiDung === $user->MaNguoiDung
+            ? 'Đã hủy yêu cầu rời câu lạc bộ.'
+            : 'Đã từ chối yêu cầu rời và giữ lại thành viên trong CLB.';
+
+        return redirect()
+            ->route('caulacbo.members', $caulacbo)
+            ->with('success', $msg);
+    }
 }
