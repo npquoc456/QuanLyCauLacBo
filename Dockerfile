@@ -6,10 +6,10 @@ WORKDIR /app
 COPY . /app
 RUN composer install --optimize-autoloader --no-dev
 
-# --- Thêm 2 dòng cấp quyền này vào ---
+# Cấp quyền và đảm bảo liên kết lưu trữ công khai (storage link) chính xác
+RUN rm -rf /app/public/storage && php artisan storage:link
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 RUN chmod -R 775 /app/storage /app/bootstrap/cache
-# -----------------------------------
 
 EXPOSE 10000
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
+CMD sh -c "php artisan storage:link && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"

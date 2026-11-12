@@ -18,7 +18,10 @@ Route::get('/storage/{path}', function (string $path) {
         abort(404);
     }
 
-    return response()->file($fullPath);
+    return response()->file($fullPath, [
+        'Cache-Control' => 'public, max-age=86400',
+        'Access-Control-Allow-Origin' => '*',
+    ]);
 })->where('path', '.*')->name('storage.fallback');
 
 Route::middleware('auth')->group(function () {

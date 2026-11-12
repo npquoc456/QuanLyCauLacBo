@@ -14,9 +14,10 @@
     <section class="auth-settings-card">
         <div class="auth-settings-avatar">
             @if ($user->URLAnhDaiDien)
-                <img src="{{ $user->URLAnhDaiDien }}" alt="Ảnh đại diện của {{ $user->HoTen }}">
+                <img src="{{ $user->URLAnhDaiDien }}" alt="Ảnh đại diện của {{ $user->HoTen }}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                <span class="auth-settings-avatar-fallback" style="display: none;">{{ mb_strtoupper(mb_substr($user->HoTen, 0, 1)) }}</span>
             @else
-                {{ mb_strtoupper(mb_substr($user->HoTen, 0, 1)) }}
+                <span class="auth-settings-avatar-fallback">{{ mb_strtoupper(mb_substr($user->HoTen, 0, 1)) }}</span>
             @endif
         </div>
         <div class="auth-settings-intro">
