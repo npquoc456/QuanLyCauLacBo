@@ -153,8 +153,8 @@
                                 <span>{{ mb_strtoupper(mb_substr($member->HoTen, 0, 1)) }}</span>
                             @endif
                             <div>
-                                <strong>{{ $member->HoTen }}</strong>
-                                <small>{{ $member->Email }} · {{ $member->MSSV }}</small>
+                                <strong title="{{ $member->HoTen }}">{{ $member->HoTen }}</strong>
+                                <small title="{{ $member->Email }} · {{ $member->MSSV }}">{{ $member->Email }} · {{ $member->MSSV }}</small>
                             </div>
                         </div>
                         <div class="club-member-role">
